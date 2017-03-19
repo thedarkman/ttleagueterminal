@@ -21,9 +21,6 @@ MIFAREReader = MFRC522.MFRC522()
 
 print "Welcome to the TT League Terminal"
 
-Player1Id = ""
-Player2Id = ""
-
 def waitForTag():
     global notFound
     notFound = True
