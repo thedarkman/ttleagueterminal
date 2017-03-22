@@ -1,20 +1,49 @@
+from TTLeague import Match, Game, Player
 import RPi.GPIO as GPIO
 import MFRC522
 import signal
+import json
+import requests
 from time import sleep
 
+# init empty configuration
+config = {} 
+
+try:
+   # try to load config from file
+   config = json.load(open('config.json'))
+except Exception, e:
+   print("Error while getting config: "+ str(e))
+   exit()
 
 notFound = True
 
 # Capture SIGINT for cleanup when the script is aborted
-def end_read(signal,frame):
+def end_read(signal, frame):
     global notFound
     print "Ctrl+C captured, ending read."
     notFound = False
     GPIO.cleanup()
 
+def getHexStringFromScannedTag(tag):
+    return '{:x}{:x}{:x}{:x}'.format(tag[0], tag[1], tag[2], tag[3])
+
+def getPlayer(nfcTag):
+    params = {'clientToken': config['secretKey']}
+    url = '{}/user/{}'.format(config['baseUrl'], nfcTag)
+    #print("requesting "+ url)
+    r = requests.get(url, params=params)
+    if r.status_code == requests.codes.ok:
+       obj = r.json()
+       pObj = Player(obj['nfcTag'], obj['username'])
+       return pObj
+    else:
+       print("server returned (status code: {:d}): {:s} ".format(r.status_code, r.text))
+       
 # Hook the SIGINT
 signal.signal(signal.SIGINT, end_read)
+
+GPIO.setwarnings(False)
 
 # Create an object of the class MFRC522
 MIFAREReader = MFRC522.MFRC522()
@@ -44,12 +73,22 @@ def waitForTag():
 
 
 print "waiting now for player 1 scan ..."
-player1 = waitForTag()
-print 'player 1 - %x%x%x%x' % (player1[0], player1[1], player1[2], player1[3])
-sleep(2)
+rawTag = waitForTag()
+nfcTag = getHexStringFromScannedTag(rawTag)
+print('player 1 - {}'.format(nfcTag))
+
+p1 = getPlayer(nfcTag)
+print(str(p1))
 print "player 1 found, now waiting for player 2 scan ..."
-player2 = waitForTag()
-print 'player 2 - %x%x%x%x' % (player2[0], player2[1], player2[2], player2[3])
+print("\n")
+sleep(1)
+
+rawTag = waitForTag()
+nfcTag = getHexStringFromScannedTag(rawTag)
+print('player 2 - {}'.format(nfcTag))
+
+p2 = getPlayer(nfcTag)
+print(str(p2))
 print
 print
-print "Both found, let's play table tennis"
+print "(Hopefully) both found, let's play table tennis"
