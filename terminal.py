@@ -1,3 +1,5 @@
+#!/usr/bin/python
+
 from TTLeague import Match, Game, Player
 import RPi.GPIO as GPIO
 import MFRC522
@@ -28,6 +30,8 @@ def end_read(signal, frame):
 def getHexStringFromScannedTag(tag):
     return '{:x}{:x}{:x}{:x}'.format(tag[0], tag[1], tag[2], tag[3])
 
+
+
 def getPlayer(nfcTag):
     params = {'clientToken': config['secretKey']}
     url = '{}/user/{}'.format(config['baseUrl'], nfcTag)
@@ -50,8 +54,10 @@ MIFAREReader = MFRC522.MFRC522()
 
 print "Welcome to the TT League Terminal"
 
+oldTag = ''
 def waitForTag():
     global notFound
+    global oldTag
     notFound = True
     while notFound:
 
@@ -60,16 +66,19 @@ def waitForTag():
 
        # If a card is found
        if status == MIFAREReader.MI_OK:
-           print "tag detected"
+           #print "tag detected"
 
            # Get the UID of the card
            (status,uid) = MIFAREReader.MFRC522_Anticoll()
 
            # If we have the UID, continue
            if status == MIFAREReader.MI_OK:
-              print "tag id read"
-              notFound = False
-              return uid
+              #print "tag id read"
+              if oldTag != uid:
+                 notFound = False
+                 oldTag = uid
+                 sleep(0.1)
+                 return uid
 
 
 print "waiting now for player 1 scan ..."
@@ -79,9 +88,8 @@ print('player 1 - {}'.format(nfcTag))
 
 p1 = getPlayer(nfcTag)
 print(str(p1))
-print "player 1 found, now waiting for player 2 scan ..."
-print("\n")
-sleep(1)
+print('player 1 found, now waiting for player 2 scan ...')
+print
 
 rawTag = waitForTag()
 nfcTag = getHexStringFromScannedTag(rawTag)
@@ -91,4 +99,4 @@ p2 = getPlayer(nfcTag)
 print(str(p2))
 print
 print
-print "(Hopefully) both found, let's play table tennis"
+print('(Hopefully) both found, let\'s play table tennis')
