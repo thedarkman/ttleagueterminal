@@ -19,23 +19,26 @@ class Match:
       self.games.append(game)
  
   # data format for each match data: { w: 'Horst', l: 'Steffen Krause', diff: 2, date: 1490262281602 }
-  def getMatchDatasAsJson(self):
-      data = []
-      homePoints = 0
-      guestPoints = 0
-      for g in self.games:
-         if g.home > g.guest:
+  def match_data_as_json(self):
+      data = self.get_match_data()
+      return json.dumps(data)
+
+  def get_match_data(self):
+    data = []
+    self.timestamp = int(time.time() * 1000)
+    for g in self.games:
+        if g.home > g.guest:
             w = self.player1.name
             l = self.player2.name
-            diff = g.home -g.guest
-         else:
+            diff = g.home - g.guest
+        else:
             w = self.player2.name
             l = self.player1.name
             diff = g.guest - g.home
-         print('home: {:d}, guest: {:d}'.format(homePoints, guestPoints))
-         data.append({'w': w, 'l': l, 'diff': diff, 'timestamp': g.timestamp})
-      return json.dumps(data)
-         
+        self.timestamp += 1
+        data.append({'w': w, 'l': l, 'diff': diff, 'date': self.timestamp})
+    return data
+
  
   def __str__(self):
     games_str = json.dumps([g.__dict__ for g in self.games]) 
@@ -45,7 +48,6 @@ class Game:
   def __init__(self, home=0, guest=0):
     self.home = home
     self.guest = guest
-    self.timestamp = int(time.time()*1000)
 
   def __str__(self):
     return str(self.__dict__)
