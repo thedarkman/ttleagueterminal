@@ -2,6 +2,7 @@
 
 import json
 import signal
+import subprocess
 from time import sleep
 
 import RPi.GPIO as GPIO
@@ -70,6 +71,10 @@ def wait_for_tag():
            if status == MIFAREReader.MI_OK:
               #print "tag id read"
               if oldTag != uid:
+                 if hex_string_from_nfc_tag(uid) == config['endTagId']:
+                    print('Exit tag scanned, shutting down in 2 seconds ...')
+                    sleep(2)
+                    subprocess.call("sudo shutdown -hP now", shell=True)
                  notFound = False
                  oldTag = uid
                  sleep(0.1)
@@ -85,7 +90,7 @@ def search_player(nfcTag):
     socketIO = SocketIO(config['url'], verify=False)
     socketIO.on('resultPlayer', on_result_player)
     socketIO.emit('requestPlayerByTagId', {'tagId': nfcTag})
-    socketIO.wait(3)
+    socketIO.wait(seconds=3)
 
 
 
