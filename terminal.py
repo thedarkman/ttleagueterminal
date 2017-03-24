@@ -1,15 +1,21 @@
 #!/usr/bin/python
 
-from TTLeague import Match, Game, Player
-import RPi.GPIO as GPIO
-import MFRC522
-import signal
 import json
-import requests
+import signal
 from time import sleep
 
+import RPi.GPIO as GPIO
+from socketIO_client import SocketIO
+
+import MFRC522
+
+from TTLeague import Player
+
+socketIO = None
+players = []
+
 # init empty configuration
-config = {} 
+config = {}
 
 try:
    # try to load config from file
@@ -27,23 +33,10 @@ def end_read(signal, frame):
     notFound = False
     GPIO.cleanup()
 
-def getHexStringFromScannedTag(tag):
+
+def hex_string_from_nfc_tag(tag):
     return '{:x}{:x}{:x}{:x}'.format(tag[0], tag[1], tag[2], tag[3])
 
-
-
-def getPlayer(nfcTag):
-    params = {'clientToken': config['secretKey']}
-    url = '{}/user/{}'.format(config['baseUrl'], nfcTag)
-    #print("requesting "+ url)
-    r = requests.get(url, params=params)
-    if r.status_code == requests.codes.ok:
-       obj = r.json()
-       pObj = Player(obj['nfcTag'], obj['username'])
-       return pObj
-    else:
-       print("server returned (status code: {:d}): {:s} ".format(r.status_code, r.text))
-       
 # Hook the SIGINT
 signal.signal(signal.SIGINT, end_read)
 
@@ -55,7 +48,9 @@ MIFAREReader = MFRC522.MFRC522()
 print "Welcome to the TT League Terminal"
 
 oldTag = ''
-def waitForTag():
+
+
+def wait_for_tag():
     global notFound
     global oldTag
     notFound = True
@@ -81,22 +76,30 @@ def waitForTag():
                  return uid
 
 
-print "waiting now for player 1 scan ..."
-rawTag = waitForTag()
-nfcTag = getHexStringFromScannedTag(rawTag)
-print('player 1 - {}'.format(nfcTag))
+def on_result_player(*args):
+    print("received Player name: " + args[0]['name'] + " with tagId: " + args[0]['tagId'])
+    players.append(Player(args[0]['tagId'], args[0]['name']))
 
-p1 = getPlayer(nfcTag)
-print(str(p1))
-print('player 1 found, now waiting for player 2 scan ...')
-print
 
-rawTag = waitForTag()
-nfcTag = getHexStringFromScannedTag(rawTag)
-print('player 2 - {}'.format(nfcTag))
+def search_player(nfcTag):
+    socketIO = SocketIO(config['url'], verify=False)
+    socketIO.on('resultPlayer', on_result_player)
+    socketIO.emit('requestPlayerByTagId', {'tagId': nfcTag})
+    socketIO.wait(3)
 
-p2 = getPlayer(nfcTag)
-print(str(p2))
-print
-print
-print('(Hopefully) both found, let\'s play table tennis')
+
+
+while True:
+    while (2-len(players)) > 0:
+        print('waiting for {:d} players to scan ...'.format((2-len(players))))
+        rawTag = wait_for_tag()
+        nfcTag = hex_string_from_nfc_tag(rawTag)
+        print('player tagId scanned - {}'.format(nfcTag))
+        search_player(nfcTag)
+
+
+    print "seems we have both player: "+ str([p.name for p in players])
+
+    # loop for games to play 
+ 
+    exit()
