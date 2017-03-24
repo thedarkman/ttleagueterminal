@@ -1,6 +1,7 @@
 import time
 import json
 
+
 class TTLeague:
   def __init__(self, setCount=3):
     self.setCount = setCount
@@ -8,14 +9,16 @@ class TTLeague:
   def __str__(self):
     return str(self.__dict__)
 
+
 class Match:
 
   def __init__(self, player1, player2):
+      self.timestamp = int(time.time() * 1000)
       self.games = []
       self.player1 = player1
       self.player2 = player2
 
-  def addGame(self, game):
+  def add_game(self, game):
       self.games.append(game)
  
   # data format for each match data: { w: 'Horst', l: 'Steffen Krause', diff: 2, date: 1490262281602 }
@@ -25,7 +28,6 @@ class Match:
 
   def get_match_data(self):
     data = []
-    self.timestamp = int(time.time() * 1000)
     for g in self.games:
         if g.home > g.guest:
             w = self.player1.name
@@ -39,10 +41,10 @@ class Match:
         data.append({'w': w, 'l': l, 'diff': diff, 'date': self.timestamp})
     return data
 
- 
   def __str__(self):
     games_str = json.dumps([g.__dict__ for g in self.games]) 
     return "Match: {} vs {}; Sets: {}".format(str(self.player1), str(self.player2), games_str)
+
 
 class Game:
   def __init__(self, home=0, guest=0):
@@ -51,6 +53,7 @@ class Game:
 
   def __str__(self):
     return str(self.__dict__)
+
 
 class Player:
   def __init__(self, nfcTag="", name=""):

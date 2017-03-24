@@ -10,7 +10,7 @@ try:
    # try to load config from file
    config = json.load(open('config.json'))
 except Exception, e:
-   print("Error while getting config: "+ str(e))
+   print('Error while getting config: '+ str(e))
    exit()
 
 
@@ -35,7 +35,7 @@ def on_connect():
     sleep(2)
 
 def on_refresh_data(*args):
-    print 'refreshedData', args
+    print('refreshedData', args)
     socketIO.disconnect()
 
 def on_result_player(*args):
@@ -52,9 +52,9 @@ def add_match():
         g1 = Game(14, 12)
         g2 = Game(5, 11)
         g3 = Game(11, 6)
-        m.addGame(g1)
-        m.addGame(g2)
-        m.addGame(g3)
+        m.add_game(g1)
+        m.add_game(g2)
+        m.add_game(g3)
         matchDatas = m.get_match_data()
         print("Match data to send: "+ str(matchDatas))
         socketIO.emit('addMatch', matchDatas)
