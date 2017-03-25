@@ -10,7 +10,7 @@ from socketIO_client import SocketIO
 
 import MFRC522
 
-from TTLeague import Player
+from TTLeague import Player, Match, Game
 
 socketIO = None
 players = []
@@ -86,12 +86,33 @@ def on_result_player(*args):
     players.append(Player(args[0]['tagId'], args[0]['name']))
 
 
+def on_ack_match():
+    print('match was submitted successfully')
+
+
 def search_player(nfcTag):
     socketIO = SocketIO(config['url'], verify=False)
     socketIO.on('resultPlayer', on_result_player)
+    socketIO.on('error', on_error)
     socketIO.emit('requestPlayerByTagId', {'tagId': nfcTag})
     socketIO.wait(seconds=3)
 
+
+def on_error(*args):
+    print('Error received: '+ str(args[0]))
+
+
+def add_match(match):
+    socketIO = SocketIO(config['url'], verify=False)
+    socketIO.on('ackMatch', on_ack_match)
+    socketIO.on('error', on_error)
+    socketIO.emit('addMatch', match.get_match_data())
+    socketIO.wait(seconds=5)
+
+
+def clear_players():
+    global players
+    players = []
 
 
 while True:
@@ -102,9 +123,17 @@ while True:
         print('player tagId scanned - {}'.format(nfcTag))
         search_player(nfcTag)
 
+    print('seems we have both player: '+ str([p.name for p in players]))
+    print('creating match')
+    match = Match(players[0], players[1])
+    for x in (1, 2, 3):
+        # loop for games to play
+        s = raw_input('Enter values for set {:d} (or X for end): '.format(x))
+        if s == 'X':
+            break
+        points = s.split(':')
+        match.add_game(Game(int(points[0]), int(points[1])))
 
-    print "seems we have both player: "+ str([p.name for p in players])
-
-    # loop for games to play 
- 
-    exit()
+    print('Match finished: '+ str(match.get_match_data()))
+    add_match(match)
+    clear_players()
