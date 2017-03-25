@@ -2,6 +2,8 @@
 A python project to send table tennis game points to a league app
 
 # Dependencies
+* Adafruit CharLCD - https://github.com/adafruit/Adafruit_Python_CharLCD
+  * Or now possible to install via ``sudo pip install adafruit-charlcd``
 * SocketIO Client 0.5 - https://pypi.python.org/pypi/socketIO-client/0.5.7.2
 * RPi - As running on a Raspberry Pi Zero W
 * SPI-Py - https://github.com/lthiery/SPI-Py
