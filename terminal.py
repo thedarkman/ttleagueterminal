@@ -16,28 +16,6 @@ from Adafruit_CharLCD import Adafruit_CharLCD
 
 from evdev import InputDevice, list_devices, categorize, ecodes, KeyEvent
 
-socketIO = None
-players = []
-last_players_names = []
-
-# init empty configuration
-config = {}
-
-try:
-    # try to load config from file
-    config = json.load(open('config.json'))
-except Exception, e:
-    print("Error while getting config: " + str(e))
-    exit()
-
-# default lcd settings; Pin numbers in GPIO.BCM mode
-config.update({'lcd': {'en': 5, 'rs': 12, 'd4': 26, 'd5': 19, 'd6': 13, 'd7': 6, 'cols': 16, 'lines': 2}})
-
-notFound = True
-
-dev = InputDevice(config['keyboardDevice'])
-
-
 # Capture SIGINT for cleanup when the script is aborted
 def end_read(signal, frame):
     global notFound
@@ -49,32 +27,6 @@ def end_read(signal, frame):
 
 def hex_string_from_nfc_tag(tag):
     return '{:x}{:x}{:x}{:x}'.format(tag[0], tag[1], tag[2], tag[3])
-
-
-# Hook the SIGINT
-signal.signal(signal.SIGINT, end_read)
-
-GPIO.setwarnings(False)
-
-keypad_map = {'KEY_KP0': 48, 'KEY_KP2': 50, 'KEY_KP3': 51,
-              'KEY_KP4': 52, 'KEY_KP5': 53, 'KEY_KP6': 54, 'KEY_KP7': 55,
-              'KEY_KP8': 56, 'KEY_KP9': 57}
-
-# Create an object of the class MFRC522
-MIFAREReader = MFRC522.MFRC522()
-
-lcdConfig = config['lcd']
-lcd = Adafruit_CharLCD(lcdConfig['rs'], lcdConfig['en'], lcdConfig['d4'],
-                       lcdConfig['d5'], lcdConfig['d6'], lcdConfig['d7'],
-                       lcdConfig['cols'], lcdConfig['lines'])
-
-lcd.clear()
-lcd.message("Welcome to the\nTTLeagueTerminal")
-print "Welcome to the TT League Terminal"
-
-sleep(5)
-
-oldTag = ''
 
 
 def wait_for_tag():
@@ -108,6 +60,7 @@ def wait_for_tag():
                     oldTag = uid
                     sleep(0.1)
                     return uid
+    return None
 
 
 def on_result_player(*args):
@@ -157,23 +110,23 @@ def add_match(match):
 def clear_points_display():
     # clear old points
     for row in [1, 2]:
-        lcd.set_cursor(int(lcdConfig['cols']) - 2, row)
+        lcd.set_cursor(int(_lcd_cols) - 2, row)
         lcd.write8(ord(' '), True)
         lcd.write8(ord(' '), True)
 
 
 def wait_for_points(set, row):
     # print current set
-    lcd.set_cursor(int(lcdConfig['cols']) - 4, 0)
+    lcd.set_cursor(int(_lcd_cols) - 4, 0)
     lcd.write8(ord('S'), True)
-    lcd.set_cursor(int(lcdConfig['cols']) - 4, 1)
+    lcd.set_cursor(int(_lcd_cols) - 4, 1)
     lcd.write8(ord(str(set)), True)
     # clear old points in this row
-    lcd.set_cursor(int(lcdConfig['cols']) - 2, row)
+    lcd.set_cursor(int(_lcd_cols) - 2, row)
     lcd.write8(ord(' '), True)
     lcd.write8(ord(' '), True)
     # reposition
-    lcd.set_cursor(int(lcdConfig['cols']) - 2, row)
+    lcd.set_cursor(int(_lcd_cols) - 2, row)
     lcd.blink(True)
     typed = 0
     points = 0
@@ -213,7 +166,7 @@ def clear_players():
 
 def show_match_on_display(match):
     lcd.clear()
-    player_str = '{:5s} vs. {:5s}'.format(match.player1.name, match.player2.name)
+    player_str = '{:6s} - {:6s}'.format(match.player1.name, match.player2.name)
     lcd.message(player_str)
 
 
@@ -228,6 +181,55 @@ def show_elo_change(elo_changes):
             lcd.write8(ord(c))
         row += 1
 
+########################################################################
+#  Script start here
+########################################################################
+
+socketIO = None
+players = []
+last_players_names = []
+
+# init empty configuration
+config = {}
+
+try:
+    # try to load config from file
+    config = json.load(open('config.json'))
+except Exception, e:
+    print("Error while getting config: " + str(e))
+    exit()
+
+lcdConfig = config['lcd']
+_lcd_rows = lcdConfig['lines']
+_lcd_cols = lcdConfig['cols']
+
+notFound = True
+
+dev = InputDevice(config['keyboardDevice'])
+
+# Hook the SIGINT
+signal.signal(signal.SIGINT, end_read)
+
+GPIO.setwarnings(False)
+
+keypad_map = {'KEY_KP0': 48, 'KEY_KP2': 50, 'KEY_KP3': 51,
+              'KEY_KP4': 52, 'KEY_KP5': 53, 'KEY_KP6': 54, 'KEY_KP7': 55,
+              'KEY_KP8': 56, 'KEY_KP9': 57}
+
+# Create an object of the class MFRC522
+MIFAREReader = MFRC522.MFRC522()
+
+
+lcd = Adafruit_CharLCD(lcdConfig['rs'], lcdConfig['en'], lcdConfig['d4'],
+                       lcdConfig['d5'], lcdConfig['d6'], lcdConfig['d7'],
+                       _lcd_cols, _lcd_rows)
+
+lcd.clear()
+lcd.message("Welcome to the\nTTLeagueTerminal")
+print "Welcome to the TTLeagueTerminal"
+sleep(5)
+
+oldTag = ''
 
 while True:
     lcd.clear()
@@ -262,6 +264,6 @@ while True:
         match.add_game(Game(int(home), int(guest)))
     print('Match finished: ' + str(match.get_match_data()))
     show_match_on_display(match)
-    add_match(match)
     sleep(2)
+    add_match(match)
     clear_players()
