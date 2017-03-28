@@ -54,7 +54,7 @@ def wait_for_tag():
                     if hex_string_from_nfc_tag(uid) == config['endTagId']:
                         print('Exit tag scanned, shutting down in 2 seconds ...')
                         lcd.clear()
-                        lcd.message('Bye ...')
+                        lcd.message('Time to say\n\n      goodbye')
                         sleep(4)
                         lcd.clear()
                         subprocess.call("sudo shutdown -hP now", shell=True)
@@ -95,7 +95,6 @@ def on_error(*args):
 def on_refreshed_data(*args):
     data = args[0]
     elo_changes = {}
-    print('refreshedData received:\n' + str(data))
     for player in data['players']:
         if player['name'] in last_players_names:
             print(player['name'] + ' ' + str(player['eloChange']))
@@ -188,7 +187,6 @@ def show_match_on_display(match):
 def show_elo_change(elo_changes):
     row = 2
     lcd.clear()
-    print('Elo changes:')
     lcd.message('Elo changes:')
     for player, change in elo_changes.items():
         lcd.set_cursor(0, row)
