@@ -2,6 +2,7 @@ from TTLeague import Match, Game, Player
 from time import sleep
 from socketIO_client import SocketIO, LoggingNamespace
 import json
+import socket
 
 # init empty configuration
 config = {}
@@ -77,13 +78,22 @@ def add_match():
         print("Match data to send: "+ str(matchDatas))
         socketIO.emit('addMatch', matchDatas)
 
+def get_ip_address():
+    return [
+             (s.connect(('8.8.8.8', 53)),
+              s.getsockname()[0],
+              s.close()) for s in
+                  [socket.socket(socket.AF_INET, socket.SOCK_DGRAM)]
+           ][0][1]
 
-socketIO = SocketIO(config['url'], verify=False)
-socketIO.on('connect', on_connect)
-socketIO.on('refreshedData', on_refresh_data)
-socketIO.on('resultPlayer', on_result_player)
-socketIO.wait(seconds=30)
+#socketIO = SocketIO(config['url'], verify=False)
+#socketIO.on('connect', on_connect)
+#socketIO.on('refreshedData', on_refresh_data)
+#socketIO.on('resultPlayer', on_result_player)
+#socketIO.wait(seconds=30)
 
+ip = get_ip_address()
+print('IP {}'.format(ip))
 
 
 

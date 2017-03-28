@@ -3,6 +3,7 @@
 import json
 import signal
 import subprocess
+import socket
 from time import sleep
 
 import RPi.GPIO as GPIO
@@ -199,6 +200,15 @@ def show_elo_change(elo_changes):
         row += 1
 
 
+def get_ip_address():
+    return [
+        (s.connect(('8.8.8.8', 53)),
+         s.getsockname()[0],
+         s.close()) for s in
+        [socket.socket(socket.AF_INET, socket.SOCK_DGRAM)]
+    ][0][1]
+
+
 ########################################################################
 #  Script start here
 ########################################################################
@@ -241,10 +251,12 @@ lcd = Adafruit_CharLCD(lcdConfig['rs'], lcdConfig['en'], lcdConfig['d4'],
                        lcdConfig['d5'], lcdConfig['d6'], lcdConfig['d7'],
                        _lcd_cols, _lcd_rows)
 
+ip = get_ip_address()
+welcome = "Welcome to the\nTTLeagueTerminal\n\nIP: {}".format(ip)
 lcd.clear()
-lcd.message("Welcome to the\nTTLeagueTerminal")
-print "Welcome to the TTLeagueTerminal"
-sleep(5)
+lcd.message(welcome)
+print(welcome)
+sleep(3)
 
 oldTag = ''
 
