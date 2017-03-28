@@ -1,5 +1,7 @@
 #!/bin/bash
 
 cd /home/pi/ttleagueterminal
-
-python terminal.py
+git pull
+if [ $? -eq 0 ]; then
+   python terminal.py
+fi
