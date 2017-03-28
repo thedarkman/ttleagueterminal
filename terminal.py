@@ -84,7 +84,9 @@ def search_player(nfcTag):
 
 def on_error(*args):
     print('Error received: ' + str(args[0]))
-
+    lcd.clear()
+    lcd.message('Error received:\n'+ str(args[0]))
+    sleep(2)
 
 def on_refreshed_data(*args):
     data = args[0]
