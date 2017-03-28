@@ -16,6 +16,7 @@ from Adafruit_CharLCD import Adafruit_CharLCD
 
 from evdev import InputDevice, list_devices, categorize, ecodes, KeyEvent
 
+
 # Capture SIGINT for cleanup when the script is aborted
 def end_read(signal, frame):
     global notFound
@@ -66,7 +67,7 @@ def wait_for_tag():
 def on_result_player(*args):
     print("received Player name: " + args[0]['name'] + " with tagId: " + args[0]['tagId'])
     lcd.clear()
-    lcd.message('found player:\n\n{:16s}'.format(args[0]['name']))
+    lcd.message('found player:\n\n{:^' + str(_lcd_cols) + '}'.format(args[0]['name']))
     players.append(Player(args[0]['tagId'], args[0]['name']))
 
 
@@ -85,16 +86,17 @@ def search_player(nfcTag):
 def on_error(*args):
     print('Error received: ' + str(args[0]))
     lcd.clear()
-    lcd.message('Error received:\n'+ str(args[0]))
+    lcd.message('Error received:\n' + str(args[0]))
     sleep(2)
+
 
 def on_refreshed_data(*args):
     data = args[0]
     elo_changes = {}
-    print('refreshedData received:\n'+ str(data))
+    print('refreshedData received:\n' + str(data))
     for player in data['players']:
         if player['name'] in last_players_names:
-            print(player['name'] + ' '+ str(player['eloChange']))
+            print(player['name'] + ' ' + str(player['eloChange']))
             elo_changes.update({player['name']: player['eloChange']})
 
     if len(elo_changes.keys()) > 0:
@@ -170,7 +172,7 @@ def clear_players():
 def show_match_on_display(match):
     lcd.clear()
     player_str = '{:6s} - {:6s}\n'.format(match.player1.name, match.player2.name)
-    
+
     for game in match.games:
         # home points
         player_str += "{:2d} ".format(game.home)
@@ -178,7 +180,7 @@ def show_match_on_display(match):
     for game in match.games:
         # guest points
         player_str += "{:2d} ".format(game.guest)
-    lcd.message(player_str)    
+    lcd.message(player_str)
 
 
 def show_elo_change(elo_changes):
@@ -188,11 +190,12 @@ def show_elo_change(elo_changes):
     lcd.message('Elo changes:')
     for player, change in elo_changes.items():
         lcd.set_cursor(0, row)
-        msg = '{:11s} {:4d}'.format(player, change)
+        msg = '{:' + str(_lcd_cols - 5) + 's} {:+4d}'.format(player, change)
         print(msg)
         for c in msg:
             lcd.write8(ord(c), True)
         row += 1
+
 
 ########################################################################
 #  Script start here
@@ -232,7 +235,6 @@ keypad_map = {'KEY_KP0': 48, 'KEY_KP2': 50, 'KEY_KP3': 51,
 # Create an object of the class MFRC522
 MIFAREReader = MFRC522.MFRC522()
 
-
 lcd = Adafruit_CharLCD(lcdConfig['rs'], lcdConfig['en'], lcdConfig['d4'],
                        lcdConfig['d5'], lcdConfig['d6'], lcdConfig['d7'],
                        _lcd_cols, _lcd_rows)
@@ -264,7 +266,7 @@ while True:
     lcd.message('Players found\n{:s}\n{:s}\ncreating match ...'.format(players[0].name, players[1].name))
     print('creating match')
     match = Match(players[0], players[1])
-    sleep(3)
+    sleep(1)
     lcd.clear()
     lcd.message('{}\n{}'.format(players[0].name, players[1].name))
     for x in range(1, 6):
