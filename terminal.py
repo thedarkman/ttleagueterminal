@@ -66,7 +66,7 @@ def wait_for_tag():
 def on_result_player(*args):
     print("received Player name: " + args[0]['name'] + " with tagId: " + args[0]['tagId'])
     lcd.clear()
-    lcd.message('found player:\n{:16s}'.format(args[0]['name']))
+    lcd.message('found player:\n\n{:16s}'.format(args[0]['name']))
     players.append(Player(args[0]['tagId'], args[0]['name']))
 
 
@@ -86,9 +86,10 @@ def on_error(*args):
     print('Error received: ' + str(args[0]))
 
 
-def on_refresh_data(*args):
+def on_refreshed_data(*args):
     data = args[0]
     elo_changes = {}
+    print('refreshedData received:\n'+ str(data))
     for player in data['players']:
         if player['name'] in last_players_names:
             print(player['name'] + ' '+ str(player['eloChange']))
@@ -102,7 +103,7 @@ def add_match(match):
     socketIO = SocketIO(config['url'], verify=False)
     socketIO.on('ackMatch', on_ack_match)
     socketIO.on('error', on_error)
-    socketIO.on('refreshData', on_refresh_data())
+    socketIO.on('refreshedData', on_refreshed_data)
     socketIO.emit('addMatch', match.get_match_data())
     socketIO.wait(seconds=5)
 
@@ -166,19 +167,29 @@ def clear_players():
 
 def show_match_on_display(match):
     lcd.clear()
-    player_str = '{:6s} - {:6s}'.format(match.player1.name, match.player2.name)
-    lcd.message(player_str)
+    player_str = '{:6s} - {:6s}\n'.format(match.player1.name, match.player2.name)
+    
+    for game in match.games:
+        # home points
+        player_str += "{:2d} ".format(game.home)
+    player_str += "\n"
+    for game in match.games:
+        # guest points
+        player_str += "{:2d} ".format(game.guest)
+    lcd.message(player_str)    
 
 
 def show_elo_change(elo_changes):
-    row = 0
+    row = 2
     lcd.clear()
+    print('Elo changes:')
+    lcd.message('Elo changes:')
     for player, change in elo_changes.items():
         lcd.set_cursor(0, row)
-        print('Elo change for player {:s} is {:d}'.format(player, change))
         msg = '{:11s} {:4d}'.format(player, change)
+        print(msg)
         for c in msg:
-            lcd.write8(ord(c))
+            lcd.write8(ord(c), True)
         row += 1
 
 ########################################################################
@@ -236,7 +247,7 @@ while True:
     while (2 - len(players)) > 0:
         print('waiting for {:d} players to scan ...'.format((2 - len(players))))
         lcd.clear()
-        lcd.message('waiting for {:d}\nplayers to scan'.format((2 - len(players))))
+        lcd.message('Terminal ready\nwaiting for {:d}\nplayers to scan'.format((2 - len(players))))
         rawTag = wait_for_tag()
         nfcTag = hex_string_from_nfc_tag(rawTag)
         print('player tagId scanned - {}'.format(nfcTag))
@@ -248,13 +259,13 @@ while True:
     last_players_names = [players[0].name, players[1].name]
     sleep(1)
     lcd.clear()
-    lcd.message('Players found\ncreating match')
+    lcd.message('Players found\n{:s}\n{:s}\ncreating match ...'.format(players[0].name, players[1].name))
     print('creating match')
     match = Match(players[0], players[1])
     sleep(3)
     lcd.clear()
     lcd.message('{}\n{}'.format(players[0].name, players[1].name))
-    for x in range(1, 5):
+    for x in range(1, 6):
         home = wait_for_points(x, 0)
         guest = wait_for_points(x, 1)
         sleep(2)

@@ -13,6 +13,9 @@ to be able to send game points to a running node.js app acting as server
 * MFRC522 - https://github.com/mxgxw/MFRC522-python
 
 # Config 
-* See options in file _config.default.json_ (needs to be edited and saved as _config.json_)
-* LCD connection needs to be configured (HD44780 controller compatible)
-
+* Clone git repository to ``/home/pi``
+* Install dependencies
+* Config backend and LCD
+  * See options in file _config.default.json_ (needs to be edited and saved as _config.json_)
+  * LCD connection needs to be configured (HD44780 controller compatible)
+* To boot into "app" add a line ``/home/pi/ttleagueterminal/startup.sh &`` into file ``/etc/rc.local`` before the exit instruction

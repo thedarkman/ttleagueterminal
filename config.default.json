@@ -1,6 +1,7 @@
 {
   "url": "<endpoint-url>",
   "endTagId": "<when-scanned-shutdown-system>",
+  "keyboardDevice": "/dev/input/event0",
   "lcd": {
     "en": 5, "rs": 12, "d4": 26, "d5": 19, "d6": 13, "d7": 6, "cols": 16, "lines": 2
   }
