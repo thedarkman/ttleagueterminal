@@ -67,7 +67,8 @@ def wait_for_tag():
 def on_result_player(*args):
     print("received Player name: " + args[0]['name'] + " with tagId: " + args[0]['tagId'])
     lcd.clear()
-    lcd.message('found player:\n\n{:^' + str(_lcd_cols) + '}'.format(args[0]['name']))
+    fStr = 'found player:\n\n{:^' + str(_lcd_cols) + '}'
+    lcd.message(fStr.format(args[0]['name']))
     players.append(Player(args[0]['tagId'], args[0]['name']))
 
 
@@ -190,7 +191,8 @@ def show_elo_change(elo_changes):
     lcd.message('Elo changes:')
     for player, change in elo_changes.items():
         lcd.set_cursor(0, row)
-        msg = '{:' + str(_lcd_cols - 5) + 's} {:+4d}'.format(player, change)
+        fStr = '{:' + str(_lcd_cols - 5) + 's} {:+4d}'
+        msg = fStr.format(player, change)
         print(msg)
         for c in msg:
             lcd.write8(ord(c), True)
