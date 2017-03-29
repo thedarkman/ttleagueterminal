@@ -143,7 +143,7 @@ def wait_for_points(set, row):
     for event in dev.read_loop():
         if event.type == ecodes.EV_KEY:
             key = categorize(event)
-            if key.keystate == KeyEvent.key_down:
+            if key.keystate == KeyEvent.key_down and typed < 2:
                 print('keycode: '+ key.keycode)
                 if key.keycode == 'KEY_KPENTER':
                     points = int(digits.pop())
@@ -160,12 +160,13 @@ def wait_for_points(set, row):
                         lcd.set_cursor(init_position - typed, row)
                 elif key.keycode in keypad_map:
                     typed += 1
-                    if typed < 2:
-                        lcd.write8(ord(' '), True)
                     mapped = keypad_map[key.keycode]
                     digits.append(chr(mapped))
                     print('mapped {:d} --> {:s}'.format(mapped, chr(mapped)))
                     lcd.write8(mapped, True)
+                    if typed == 2:
+                        # set cursor on last digit to wait for enter
+                        lcd.set_cursor(init_position + typed, row)
     lcd.blink(False)
     return points
 
