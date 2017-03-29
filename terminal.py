@@ -98,7 +98,6 @@ def on_refreshed_data(*args):
     elo_changes = {}
     for player in data['players']:
         if player['name'] in last_players_names:
-            print(player['name'] + ' ' + str(player['eloChange']))
             elo_changes.update({player['name']: player['eloChange']})
 
     if len(elo_changes.keys()) > 0:
