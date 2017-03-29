@@ -145,9 +145,10 @@ def wait_for_points(set, row):
             key = categorize(event)
             if key.keystate == KeyEvent.key_down:
                 if key.keycode == 'KEY_KPENTER':
-                    points = int(digits.pop())
                     if len(digits) > 0:
-                        points += int(digits.pop()) * 10
+                        points = int(digits.pop())
+                        if len(digits) > 0:
+                            points += int(digits.pop()) * 10
                     break
                 elif key.keycode == 'KEY_DELETE' or key.keycode == 'KEY_BACKSPACE':
                     if len(digits) > 0:
