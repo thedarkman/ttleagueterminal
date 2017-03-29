@@ -124,16 +124,16 @@ def clear_points_display():
 
 def wait_for_points(set, row):
     # print current set
-    lcd.set_cursor(int(_lcd_cols) - 4, 0)
+    init_position = int(_lcd_cols) - 2
+    lcd.set_cursor(init_position - 2, 0)
     lcd.write8(ord('S'), True)
-    lcd.set_cursor(int(_lcd_cols) - 4, 1)
+    lcd.set_cursor(init_position - 2, 1)
     lcd.write8(ord(str(set)), True)
     # clear old points in this row
-    lcd.set_cursor(int(_lcd_cols) - 2, row)
+    lcd.set_cursor(init_position, row)
     lcd.write8(ord(' '), True)
     lcd.write8(ord(' '), True)
     # reposition
-    init_position = int(_lcd_cols) - 2
     lcd.set_cursor(init_position, row)
     lcd.blink(True)
     typed = 0
@@ -151,18 +151,16 @@ def wait_for_points(set, row):
                     break
                 elif key.keycode == 'KEY_DELETE' or key.keycode == 'KEY_BACKSPACE':
                     if len(digits) > 0:
-                        deleted = digits.pop()
-                        new_position = init_position - (typed - 1)
+                        digits.pop()
+                        new_position = init_position + (typed - 1)
                         lcd.set_cursor(new_position, row)
                         lcd.write8(ord(' '), True)
                         lcd.set_cursor(new_position, row)
                         typed -= 1
-                        print('deleted \'{}\'; cursor position after delete {:d}; typed: {:d}'.format(deleted, new_position, typed))
                 elif key.keycode in keypad_map and typed < 2:
                     typed += 1
                     mapped = keypad_map[key.keycode]
                     digits.append(chr(mapped))
-                    print('mapped {:d} --> {:s}'.format(mapped, chr(mapped)))
                     lcd.write8(mapped, True)
                     if typed == 2:
                         # set cursor on last digit to wait for enter
@@ -174,6 +172,22 @@ def wait_for_points(set, row):
 def clear_players():
     global players
     players = []
+
+
+def show_sets_on_display(games):
+    # called after a set was added to the game
+    home = ''
+    guest = ''
+    for game in games:
+        home += '{:2d} '.format(game.home)
+        guest += '{:2d} '.format(game.guest)
+
+    lcd.set_cursor(0, 2)
+    for c in home:
+        lcd.write8(ord(c), True)
+    lcd.set_cursor(0, 3)
+    for c in guest:
+        lcd.write8(ord(c), True)
 
 
 def show_match_on_display(match):
@@ -264,6 +278,7 @@ sleep(3)
 
 oldTag = ''
 
+
 while True:
     lcd.clear()
     while (2 - len(players)) > 0:
@@ -295,6 +310,7 @@ while True:
         if home == 0 and guest == 0:
             break
         match.add_game(Game(int(home), int(guest)))
+        show_sets_on_display(match.games)
     print('Match finished: ' + str(match.get_match_data()))
     if len(match.games) > 0:
         show_match_on_display(match)
