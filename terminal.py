@@ -154,13 +154,14 @@ def wait_for_points(set, row):
                     if len(digits) > 0:
                         deleted = digits.pop()
                         typed -= 1
+                        print('deleted \'{}\''.format(deleted))
                         lcd.set_cursor(init_position - typed - 1, row)
                         lcd.write8(ord(' '), True)
                         lcd.set_cursor(init_position - typed, row)
-                        print('deleted {:d}'.format(deleted))
                 elif key.keycode in keypad_map:
-                    lcd.write8(ord(' '), True)
                     typed += 1
+                    if typed < 2:
+                        lcd.write8(ord(' '), True)
                     mapped = keypad_map[key.keycode]
                     digits.append(chr(mapped))
                     print('mapped {:d} --> {:s}'.format(mapped, chr(mapped)))
@@ -294,7 +295,8 @@ while True:
             break
         match.add_game(Game(int(home), int(guest)))
     print('Match finished: ' + str(match.get_match_data()))
-    show_match_on_display(match)
-    sleep(2)
-    add_match(match)
+    if len(match.games) > 0:
+        show_match_on_display(match)
+        sleep(2)
+        add_match(match)
     clear_players()
