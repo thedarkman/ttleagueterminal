@@ -117,23 +117,23 @@ def add_match(match):
 def clear_points_display():
     # clear old points
     for row in [1, 2]:
-        lcd.set_cursor(int(_lcd_cols) - 2, row)
+        lcd.set_cursor(int(_lcd_cols) - 3, row)
         lcd.write8(ord(' '), True)
         lcd.write8(ord(' '), True)
 
 
 def wait_for_points(set, row):
     # print current set
-    lcd.set_cursor(int(_lcd_cols) - 4, 0)
+    lcd.set_cursor(int(_lcd_cols) - 5, 0)
     lcd.write8(ord('S'), True)
-    lcd.set_cursor(int(_lcd_cols) - 4, 1)
+    lcd.set_cursor(int(_lcd_cols) - 5, 1)
     lcd.write8(ord(str(set)), True)
     # clear old points in this row
-    lcd.set_cursor(int(_lcd_cols) - 2, row)
+    lcd.set_cursor(int(_lcd_cols) - 3, row)
     lcd.write8(ord(' '), True)
     lcd.write8(ord(' '), True)
     # reposition
-    init_position = int(_lcd_cols) - 2
+    init_position = int(_lcd_cols) - 3
     lcd.set_cursor(init_position, row)
     lcd.blink(True)
     typed = 0
@@ -143,7 +143,7 @@ def wait_for_points(set, row):
     for event in dev.read_loop():
         if event.type == ecodes.EV_KEY:
             key = categorize(event)
-            if key.keystate == KeyEvent.key_down and typed < 2:
+            if key.keystate == KeyEvent.key_down:
                 print('keycode: '+ key.keycode)
                 if key.keycode == 'KEY_KPENTER':
                     points = int(digits.pop())
@@ -154,11 +154,12 @@ def wait_for_points(set, row):
                     if len(digits) > 0:
                         deleted = digits.pop()
                         typed -= 1
-                        print('deleted \'{}\''.format(deleted))
-                        lcd.set_cursor(init_position - typed - 1, row)
+                        new_position = init_position - typed
+                        print('deleted \'{}\'; cursor position after delete {:d}; typed: {:d}'.format(deleted, new_position, typed))
+                        lcd.set_cursor(new_position - 1, row)
                         lcd.write8(ord(' '), True)
-                        lcd.set_cursor(init_position - typed, row)
-                elif key.keycode in keypad_map:
+                        lcd.set_cursor(new_position, row)
+                elif key.keycode in keypad_map and typed < 2:
                     typed += 1
                     mapped = keypad_map[key.keycode]
                     digits.append(chr(mapped))
