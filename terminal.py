@@ -264,7 +264,7 @@ while True:
     while (2 - len(players)) > 0:
         print('waiting for {:d} players to scan ...'.format((2 - len(players))))
         lcd.clear()
-        lcd.message('Terminal ready\nwaiting for {:d}\nplayers to scan'.format((2 - len(players))))
+        lcd.message('- Agido TT League -\nTerminal ready\nwaiting for {:d}\nplayers to scan'.format((2 - len(players))))
         rawTag = wait_for_tag()
         nfcTag = hex_string_from_nfc_tag(rawTag)
         print('player tagId scanned - {}'.format(nfcTag))
