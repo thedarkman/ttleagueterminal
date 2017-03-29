@@ -133,35 +133,38 @@ def wait_for_points(set, row):
     lcd.write8(ord(' '), True)
     lcd.write8(ord(' '), True)
     # reposition
-    lcd.set_cursor(int(_lcd_cols) - 2, row)
+    init_position = int(_lcd_cols) - 2
+    lcd.set_cursor(init_position, row)
     lcd.blink(True)
     typed = 0
     points = 0
+    digits = []
     # wait for keyboard input
     for event in dev.read_loop():
         if event.type == ecodes.EV_KEY:
             key = categorize(event)
             if key.keystate == KeyEvent.key_down:
-                if key.keycode == 'KEY_KP1':
-                    if typed == 0:
-                        points += 10
-                    else:
-                        points += 1
-                    typed += 1
-                    print('writing 1 to row ' + str(row))
-                    lcd.write8(ord('1'), True)
-                elif key.keycode in keypad_map:
-                    if typed == 0:
-                        typed += 1
+                print('keycode: '+ key.keycode)
+                if key.keycode == 'KEY_KPENTER':
+                    points = int(digits.pop())
+                    if len(digits) > 0:
+                        points += int(digits.pop()) * 10
+                    break
+                elif key.keycode == 'KEY_DELETE' or key.keycode == 'KEY_BACKSPACE':
+                    if len(digits) > 0:
+                        deleted = digits.pop()
+                        typed -= 1
+                        lcd.set_cursor(init_position - typed - 1, row)
                         lcd.write8(ord(' '), True)
-                    mapped = keypad_map[key.keycode]
-                    print('mapped {:d} --> {:s}'.format(mapped, chr(mapped)))
+                        lcd.set_cursor(init_position - typed, row)
+                        print('deleted {:d}'.format(deleted))
+                elif key.keycode in keypad_map:
+                    lcd.write8(ord(' '), True)
                     typed += 1
+                    mapped = keypad_map[key.keycode]
+                    digits.append(chr(mapped))
+                    print('mapped {:d} --> {:s}'.format(mapped, chr(mapped)))
                     lcd.write8(mapped, True)
-                    points += int(chr(mapped))
-            print('typed is now {:d} and points {:d}'.format(typed, points))
-            if typed == 2:
-                break
     lcd.blink(False)
     return points
 
@@ -239,7 +242,7 @@ signal.signal(signal.SIGINT, end_read)
 
 GPIO.setwarnings(False)
 
-keypad_map = {'KEY_KP0': 48, 'KEY_KP2': 50, 'KEY_KP3': 51,
+keypad_map = {'KEY_KP0': 48, 'KEY_KP1': 49, 'KEY_KP2': 50, 'KEY_KP3': 51,
               'KEY_KP4': 52, 'KEY_KP5': 53, 'KEY_KP6': 54, 'KEY_KP7': 55,
               'KEY_KP8': 56, 'KEY_KP9': 57}
 

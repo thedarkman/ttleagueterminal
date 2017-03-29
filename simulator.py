@@ -86,14 +86,11 @@ def get_ip_address():
                   [socket.socket(socket.AF_INET, socket.SOCK_DGRAM)]
            ][0][1]
 
-#socketIO = SocketIO(config['url'], verify=False)
-#socketIO.on('connect', on_connect)
-#socketIO.on('refreshedData', on_refresh_data)
-#socketIO.on('resultPlayer', on_result_player)
-#socketIO.wait(seconds=30)
-
-ip = get_ip_address()
-print('IP {}'.format(ip))
+socketIO = SocketIO(config['url'], verify=False)
+socketIO.on('connect', on_connect)
+socketIO.on('refreshedData', on_refresh_data)
+socketIO.on('resultPlayer', on_result_player)
+socketIO.wait(seconds=30)
 
 
 
