@@ -153,7 +153,7 @@ def wait_for_points(set, row):
                 elif key.keycode == 'KEY_DELETE' or key.keycode == 'KEY_BACKSPACE':
                     if len(digits) > 0:
                         deleted = digits.pop()
-                        new_position = init_position - typed
+                        new_position = init_position + typed - 1
                         typed -= 1
                         print('deleted \'{}\'; cursor position after delete {:d}; typed: {:d}'.format(deleted, new_position, typed))
                         lcd.set_cursor(new_position, row)
@@ -167,7 +167,7 @@ def wait_for_points(set, row):
                     lcd.write8(mapped, True)
                     if typed == 2:
                         # set cursor on last digit to wait for enter
-                        lcd.set_cursor(init_position + typed, row)
+                        lcd.set_cursor(init_position + 1, row)
     lcd.blink(False)
     return points
 
