@@ -144,7 +144,6 @@ def wait_for_points(set, row):
         if event.type == ecodes.EV_KEY:
             key = categorize(event)
             if key.keystate == KeyEvent.key_down:
-                print('keycode: '+ key.keycode)
                 if key.keycode == 'KEY_KPENTER':
                     points = int(digits.pop())
                     if len(digits) > 0:
@@ -153,12 +152,12 @@ def wait_for_points(set, row):
                 elif key.keycode == 'KEY_DELETE' or key.keycode == 'KEY_BACKSPACE':
                     if len(digits) > 0:
                         deleted = digits.pop()
-                        new_position = init_position + typed - 1
-                        typed -= 1
-                        print('deleted \'{}\'; cursor position after delete {:d}; typed: {:d}'.format(deleted, new_position, typed))
+                        new_position = init_position - (typed - 1)
                         lcd.set_cursor(new_position, row)
                         lcd.write8(ord(' '), True)
-                        lcd.set_cursor(new_position - 1, row)
+                        lcd.set_cursor(new_position, row)
+                        typed -= 1
+                        print('deleted \'{}\'; cursor position after delete {:d}; typed: {:d}'.format(deleted, new_position, typed))
                 elif key.keycode in keypad_map and typed < 2:
                     typed += 1
                     mapped = keypad_map[key.keycode]
