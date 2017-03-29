@@ -93,8 +93,18 @@ def on_error(*args):
     sleep(2)
 
 
+def refresh_data():
+    socketIO = SocketIO(config['url'], verify=False)
+    socketIO.on('error', on_error)
+    socketIO.on('refreshedData', on_refreshed_data)
+    socketIO.emit('refreshData')
+    socketIO.wait(seconds=3)
+
 def on_refreshed_data(*args):
+    global dataFun
     data = args[0]
+    print('got refreshed data')
+    dataFun = data
     elo_changes = {}
     for player in data['players']:
         if player['name'] in last_players_names:
@@ -218,6 +228,18 @@ def show_elo_change(elo_changes):
         row += 1
 
 
+def show_admin_screen():
+    if 'players' in dataFun:
+        lcd.clear()
+        for i in range(0, 4):
+            p = dataFun['players'][i]
+            lcd.set_cursor(0, i)
+            lcd.message('  {}'.format(p['name']))
+        lcd.set_cursor(0, 0)
+        lcd.write8(ord('\x00'), True)
+        sleep(3)
+
+
 def get_ip_address():
     return [
         (s.connect(('8.8.8.8', 53)),
@@ -265,18 +287,30 @@ keypad_map = {'KEY_KP0': 48, 'KEY_KP1': 49, 'KEY_KP2': 50, 'KEY_KP3': 51,
 # Create an object of the class MFRC522
 MIFAREReader = MFRC522.MFRC522()
 
+# some special char for the cld
+_arrow_right = [16, 24, 20, 18, 20, 24, 16, 0]
+_arrow_right_filled = [16, 24, 28, 30, 28, 24, 16, 0]
+
 lcd = Adafruit_CharLCD(lcdConfig['rs'], lcdConfig['en'], lcdConfig['d4'],
                        lcdConfig['d5'], lcdConfig['d6'], lcdConfig['d7'],
                        _lcd_cols, _lcd_rows)
+
+# up to 8 user defined chars are allowed on location 0..7
+lcd.create_char(0, _arrow_right)
+lcd.create_char(1, _arrow_right_filled)
 
 ip = get_ip_address()
 welcome = "Welcome to the\nTTLeagueTerminal\n\nIP: {}".format(ip)
 lcd.clear()
 lcd.message(welcome)
 print(welcome)
-sleep(3)
+sleep(1)
 
+dataFun = {}
 oldTag = ''
+
+# get actual data from server
+refresh_data()
 
 
 while True:
@@ -287,6 +321,9 @@ while True:
         lcd.message('- Agido TT League -\nTerminal ready\nwaiting for {:d}\nplayers to scan'.format((2 - len(players))))
         rawTag = wait_for_tag()
         nfcTag = hex_string_from_nfc_tag(rawTag)
+        if nfcTag == '8847744':
+            show_admin_screen()
+            continue
         print('player tagId scanned - {}'.format(nfcTag))
         lcd.clear()
         lcd.message('scan successful\nsearching player ...')
