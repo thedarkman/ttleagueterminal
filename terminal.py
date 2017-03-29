@@ -66,11 +66,12 @@ def wait_for_tag():
 
 
 def on_result_player(*args):
-    print("received Player name: " + args[0]['name'] + " with tagId: " + args[0]['tagId'])
+    _player_data = args[0]
+    print("received Player name: " + _player_data['name'] + " with tagId: " + _player_data['tagId'])
     lcd.clear()
-    fStr = 'found player:\n\n{:^' + str(_lcd_cols) + '}'
-    lcd.message(fStr.format(args[0]['name']))
-    players.append(Player(args[0]['tagId'], args[0]['name']))
+    fStr = 'found player:\n{:^' + str(_lcd_cols) + '}\nElo: {:d}'
+    lcd.message(fStr.format(_player_data['name'], _player_data['elo']))
+    players.append(Player(_player_data['tagId'], _player_data['name']))
 
 
 def on_ack_match():

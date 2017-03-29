@@ -1,6 +1,8 @@
 # don't add the config file
 config.json
 
+.idea/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
