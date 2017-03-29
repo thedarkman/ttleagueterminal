@@ -305,7 +305,6 @@ while True:
     for x in range(1, 6):
         home = wait_for_points(x, 0)
         guest = wait_for_points(x, 1)
-        sleep(2)
         clear_points_display()
         if home == 0 and guest == 0:
             break
