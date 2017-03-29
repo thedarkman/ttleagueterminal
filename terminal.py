@@ -117,23 +117,23 @@ def add_match(match):
 def clear_points_display():
     # clear old points
     for row in [1, 2]:
-        lcd.set_cursor(int(_lcd_cols) - 3, row)
+        lcd.set_cursor(int(_lcd_cols) - 2, row)
         lcd.write8(ord(' '), True)
         lcd.write8(ord(' '), True)
 
 
 def wait_for_points(set, row):
     # print current set
-    lcd.set_cursor(int(_lcd_cols) - 5, 0)
+    lcd.set_cursor(int(_lcd_cols) - 4, 0)
     lcd.write8(ord('S'), True)
-    lcd.set_cursor(int(_lcd_cols) - 5, 1)
+    lcd.set_cursor(int(_lcd_cols) - 4, 1)
     lcd.write8(ord(str(set)), True)
     # clear old points in this row
-    lcd.set_cursor(int(_lcd_cols) - 3, row)
+    lcd.set_cursor(int(_lcd_cols) - 2, row)
     lcd.write8(ord(' '), True)
     lcd.write8(ord(' '), True)
     # reposition
-    init_position = int(_lcd_cols) - 3
+    init_position = int(_lcd_cols) - 2
     lcd.set_cursor(init_position, row)
     lcd.blink(True)
     typed = 0
@@ -153,12 +153,12 @@ def wait_for_points(set, row):
                 elif key.keycode == 'KEY_DELETE' or key.keycode == 'KEY_BACKSPACE':
                     if len(digits) > 0:
                         deleted = digits.pop()
-                        typed -= 1
                         new_position = init_position - typed
+                        typed -= 1
                         print('deleted \'{}\'; cursor position after delete {:d}; typed: {:d}'.format(deleted, new_position, typed))
-                        lcd.set_cursor(new_position - 1, row)
-                        lcd.write8(ord(' '), True)
                         lcd.set_cursor(new_position, row)
+                        lcd.write8(ord(' '), True)
+                        lcd.set_cursor(new_position - 1, row)
                 elif key.keycode in keypad_map and typed < 2:
                     typed += 1
                     mapped = keypad_map[key.keycode]
