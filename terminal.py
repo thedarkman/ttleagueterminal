@@ -18,6 +18,8 @@ from Adafruit_CharLCD import Adafruit_CharLCD
 
 from evdev import InputDevice, list_devices, categorize, ecodes, KeyEvent
 
+ATT_LEAGUE_TERMINAL = 'ATTLeague Terminal'
+
 
 # Capture SIGINT for cleanup when the script is aborted
 def end_read(signal, frame):
@@ -70,8 +72,10 @@ def on_result_player(*args):
     _player_data = args[0]
     print("received Player name: " + _player_data['name'] + " with tagId: " + _player_data['tagId'])
     lcd.clear()
-    fStr = 'found player:\n{:^' + str(_lcd_cols) + '}\nElo: {:d}'
-    lcd.message(fStr.format(_player_data['name'], _player_data['elo']))
+    fStr = '{:^' + str(_lcd_cols) + 's}\n{:^' + str(_lcd_cols) + 's}\n{:^' + str(_lcd_cols) + 's}\n{:>' + str(
+        _lcd_cols) + 's}'
+    lcd.message(fStr.format(ATT_LEAGUE_TERMINAL, 'found player:', _player_data['name'],
+                            'Elo: {:d}'.format(_player_data['elo'])))
     players.append(Player(_player_data['tagId'], _player_data['name']))
 
 
@@ -101,6 +105,7 @@ def refresh_data():
     socketIO.emit('refreshData')
     socketIO.wait(seconds=3)
 
+
 def on_refreshed_data(*args):
     global dataFun
     data = args[0]
@@ -116,9 +121,10 @@ def on_refreshed_data(*args):
 
 
 def add_match(match):
-    with open("match.log", "a") as log_file:
-        log_line = '{:%Y-%m-%d %H:%M:%S} {}\n'.format(datetime.now(), match.match_data_for_log())
-        log_file.write(log_line)
+    if _log_matches:
+        with open("match.log", "a") as log_file:
+            log_line = '{:%Y-%m-%d %H:%M:%S} {}\n'.format(datetime.now(), match.match_data_for_log())
+            log_file.write(log_line)
     socketIO = SocketIO(config['url'], verify=False)
     socketIO.on('ackMatch', on_ack_match)
     socketIO.on('error', on_error)
@@ -181,6 +187,15 @@ def wait_for_points(set, row):
                         lcd.set_cursor(init_position + 1, row)
     lcd.blink(False)
     return points
+
+
+def wait_for_enter():
+    for event in dev.read_loop():
+        if event.type == ecodes.EV_KEY:
+            key = categorize(event)
+            if key.keystate == KeyEvent.key_down:
+                if key.keycode == 'KEY_KPENTER':
+                    break
 
 
 def clear_players():
@@ -271,9 +286,19 @@ except Exception, e:
     print("Error while getting config: " + str(e))
     exit()
 
+if 'url' not in config.keys() or \
+                'keyboardDevice' not in config.keys() or \
+                'lcd' not in config.keys():
+    error = 'Missing configuration key. Please check config.default.json file for configuration'
+    raise KeyError(error)
+
 lcdConfig = config['lcd']
 _lcd_rows = lcdConfig['lines']
 _lcd_cols = lcdConfig['cols']
+
+_log_matches = False
+if 'logMatches' in config.keys():
+    _log_matches = bool(config['logMatches'])
 
 notFound = True
 
@@ -304,25 +329,36 @@ lcd.create_char(0, _arrow_right)
 lcd.create_char(1, _arrow_right_filled)
 
 ip = get_ip_address()
-welcome = "Welcome to the\nTTLeagueTerminal\n\nIP: {}".format(ip)
+# welcome = "Welcome to the\nTTLeagueTerminal\n\nIP: {}".format(ip)
+welcome = '{:^' + str(_lcd_cols) + 's}\n{:^' + str(_lcd_cols) + 's}\n{:^' + str(_lcd_cols) + 's}\nIP: {}'
+welcome = welcome.format(ATT_LEAGUE_TERMINAL, 'Welcome to the', 'terminal', ip)
 lcd.clear()
 lcd.message(welcome)
 print(welcome)
-sleep(1)
+sleep(3)
+
+startMessage = '{:^' + str(_lcd_cols) + 's}\n\n{:^' + str(_lcd_cols) + 's}\n{:^' + str(_lcd_cols) + 's}'
+lcd.clear()
+lcd.message(startMessage.format(ATT_LEAGUE_TERMINAL, 'Press enter', 'to start ...'))
+wait_for_enter()
+
+# get actual data from server
+lcd.clear()
+secondMessage = '{:^' + str(_lcd_cols) + 's}\n\n{:^' + str(_lcd_cols) + 's}'
+lcd.message(secondMessage.format(ATT_LEAGUE_TERMINAL, 'connecting ...'))
+refresh_data()
 
 dataFun = {}
 oldTag = ''
-
-# get actual data from server
-refresh_data()
-
-
 while True:
     lcd.clear()
     while (2 - len(players)) > 0:
         print('waiting for {:d} players to scan ...'.format((2 - len(players))))
         lcd.clear()
-        lcd.message('- Agido TT League -\nTerminal ready\nwaiting for {:d}\nplayers to scan'.format((2 - len(players))))
+        waitMessage = '{:^' + str(_lcd_cols) + 's}\n\n{:^' + str(_lcd_cols) + 's}\n{:^' + str(_lcd_cols) + 's}'
+        waitMessage = waitMessage.format(ATT_LEAGUE_TERMINAL, 'waiting for {:d}'.format((2 - len(players))),
+                                         'players to scan')
+        lcd.message(waitMessage)
         rawTag = wait_for_tag()
         nfcTag = hex_string_from_nfc_tag(rawTag)
         if nfcTag == config['adminTag']:
@@ -330,16 +366,22 @@ while True:
             continue
         print('player tagId scanned - {}'.format(nfcTag))
         lcd.clear()
-        lcd.message('scan successful\nsearching player ...')
+        scanMessage = '{:^' + str(_lcd_cols) + 's}\n\n{:^' + str(_lcd_cols) + 's}\n{:^' + str(_lcd_cols) + 's}'
+        scanMessage = scanMessage.format(ATT_LEAGUE_TERMINAL, 'scan successful', 'searching player ...')
+        lcd.message(scanMessage)
         search_player(nfcTag)
 
     print('seems we have both player: ' + str([p.name for p in players]))
     last_players_names = [players[0].name, players[1].name]
     lcd.clear()
-    lcd.message('Players found\n{:s}\n{:s}\ncreating match ...'.format(players[0].name, players[1].name))
+    foundMessage = '{:^' + str(_lcd_cols) + 's}\n{:<' + str(_lcd_cols - 2) + 's}\n{:>' + str(
+        _lcd_cols) + 's}\n{:^' + str(_lcd_cols) + 's}'
+    foundMessage = foundMessage.format('Players found', players[0].name + ' -', players[1].name, 'creating match ...')
+    # 'Players found\n{:s}\n{:s}\ncreating match ...'.format(players[0].name, players[1].name)
+    lcd.message(foundMessage)
     print('creating match')
     match = Match(players[0], players[1])
-    sleep(1)
+    sleep(2)
     lcd.clear()
     lcd.message('{}\n{}'.format(players[0].name, players[1].name))
     for x in range(1, 6):
