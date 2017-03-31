@@ -75,8 +75,8 @@ def on_result_player(*args):
     players.append(Player(_player_data['tagId'], _player_data['name']))
 
 
-def on_ack_match():
-    print('match was submitted successfully')
+def on_ack_match(*args):
+    print('match was submitted successfully; lastEloChange {}'.format(str(args[0])))
 
 
 def search_player(nfcTag):
