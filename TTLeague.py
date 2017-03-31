@@ -30,6 +30,7 @@ class Match:
 
 
     def match_data_for_log(self):
+        # type: (None) -> str
         data = self.get_match_data()
         log = '{} - {}; '.format(self.player1.name, self.player2.name)
         for g in self.games:

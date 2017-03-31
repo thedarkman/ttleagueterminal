@@ -325,7 +325,7 @@ while True:
         lcd.message('- Agido TT League -\nTerminal ready\nwaiting for {:d}\nplayers to scan'.format((2 - len(players))))
         rawTag = wait_for_tag()
         nfcTag = hex_string_from_nfc_tag(rawTag)
-        if nfcTag == '8847744':
+        if nfcTag == config['adminTag']:
             show_admin_screen()
             continue
         print('player tagId scanned - {}'.format(nfcTag))
@@ -335,7 +335,6 @@ while True:
 
     print('seems we have both player: ' + str([p.name for p in players]))
     last_players_names = [players[0].name, players[1].name]
-    sleep(1)
     lcd.clear()
     lcd.message('Players found\n{:s}\n{:s}\ncreating match ...'.format(players[0].name, players[1].name))
     print('creating match')
