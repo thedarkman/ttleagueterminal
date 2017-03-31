@@ -5,6 +5,7 @@ import signal
 import subprocess
 import socket
 from time import sleep
+from datetime import datetime
 
 import RPi.GPIO as GPIO
 from socketIO_client import SocketIO
@@ -115,6 +116,9 @@ def on_refreshed_data(*args):
 
 
 def add_match(match):
+    with open("match.log", "a") as log_file:
+        log_line = '{:%Y-%m-%d %H:%M:%S} {}\n'.format(datetime.now(), match.match_data_for_log())
+        log_file.write(log_line)
     socketIO = SocketIO(config['url'], verify=False)
     socketIO.on('ackMatch', on_ack_match)
     socketIO.on('error', on_error)

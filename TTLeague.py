@@ -28,6 +28,16 @@ class Match:
         data = self.get_match_data()
         return json.dumps(data)
 
+
+    def match_data_for_log(self):
+        data = self.get_match_data()
+        log = '{} - {}; '.format(self.player1.name, self.player2.name)
+        for g in self.games:
+            log += '{:d}:{:d},'.format(g.home, g.guest)
+        log = log[:-1] # remove last ,
+        return log
+
+
     def get_match_data(self):
         # type: (None) -> dict
         data = []
