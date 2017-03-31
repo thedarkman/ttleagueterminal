@@ -18,4 +18,5 @@ to be able to send game points to a running node.js app acting as server
 * Config backend and LCD
   * See options in file _config.default.json_ (needs to be edited and saved as _config.json_)
   * LCD connection needs to be configured (HD44780 controller compatible)
-* To boot into "app" add a line ``/home/pi/ttleagueterminal/startup.sh &`` into file ``/etc/rc.local`` before the exit instruction
+* To boot into "app" add a line ``su - pi -c '/home/pi/ttleagueterminal/startup.sh &'`` into file ``/etc/rc.local`` before the exit instruction
+  * this command changes into a shell for user ```pi``` and starts the terminal
