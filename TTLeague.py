@@ -70,9 +70,10 @@ class Game:
 
 
 class Player:
-    def __init__(self, nfcTag="", name=""):
+    def __init__(self, nfcTag="", name="", elo=0):
         self.nfcTag = nfcTag
         self.name = name
+        self.elo = elo
 
     def __str__(self):
         return str(self.__dict__)

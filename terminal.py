@@ -34,6 +34,15 @@ def hex_string_from_nfc_tag(tag):
     return '{:x}{:x}{:x}{:x}'.format(tag[0], tag[1], tag[2], tag[3])
 
 
+def calc_elo_chances(playerElo, enemyElo):
+    # type: (int, int) -> (int, int)
+    chanceToWin = 1 / (1 + pow(10, (enemyElo - playerElo) / float(400)))
+    eloChangeWin = int(round(32 * (1 - chanceToWin)))
+    chanceToLoose = 1 / (1 + pow(10, (playerElo - enemyElo) / float(400)))
+    eloChangeLoss = int(-round(32 * (1 - chanceToLoose)))
+    return (eloChangeWin, eloChangeLoss)
+
+
 def wait_for_tag():
     global notFound
     global oldTag
@@ -69,14 +78,17 @@ def wait_for_tag():
 
 
 def on_result_player(*args):
-    _player_data = args[0]
-    print("received Player name: " + _player_data['name'] + " with tagId: " + _player_data['tagId'])
+    player_data_ = args[0]
+    tag_id_ = player_data_['tagId']
+    player_name_ = player_data_['name']
+    player_elo_ = player_data_['elo']
+    print("received Player name: " + player_name_ + " with tagId: " + tag_id_)
     lcd.clear()
     fStr = '{:^' + str(_lcd_cols) + 's}\n{:^' + str(_lcd_cols) + 's}\n{:^' + str(_lcd_cols) + 's}\n{:>' + str(
         _lcd_cols) + 's}'
-    lcd.message(fStr.format(ATT_LEAGUE_TERMINAL, 'found player:', _player_data['name'],
-                            'Elo: {:d}'.format(_player_data['elo'])))
-    players.append(Player(_player_data['tagId'], _player_data['name']))
+    lcd.message(fStr.format(ATT_LEAGUE_TERMINAL, 'found player:', player_name_,
+                            'Elo: {:d}'.format(player_elo_)))
+    players.append(Player(tag_id_, player_name_, player_elo_))
 
 
 def on_ack_match(*args):
@@ -377,13 +389,13 @@ while True:
     foundMessage = '{:^' + str(_lcd_cols) + 's}\n{:<' + str(_lcd_cols - 2) + 's}\n{:>' + str(
         _lcd_cols) + 's}\n{:^' + str(_lcd_cols) + 's}'
     foundMessage = foundMessage.format('Players found', players[0].name + ' -', players[1].name, 'creating match ...')
-    # 'Players found\n{:s}\n{:s}\ncreating match ...'.format(players[0].name, players[1].name)
     lcd.message(foundMessage)
     print('creating match')
     match = Match(players[0], players[1])
     sleep(2)
     lcd.clear()
-    lcd.message('{}\n{}'.format(players[0].name, players[1].name))
+    (eloWin, eloLoss) = calc_elo_chances(players[0].elo, players[1].elo)
+    lcd.message('{:11} {:+3d}\n{:11} {:+3d}'.format(players[0].name, eloWin, players[1].name, eloLoss))
     for x in range(1, 6):
         home = wait_for_points(x, 0)
         guest = wait_for_points(x, 1)
