@@ -10,8 +10,6 @@ Some of these packages and system tools are already included in the full raspian
   * Install via ``sudo apt-get install python-dev``
 * Python-Pip
   * Install via ``sudo apt-get install python-pip``
-* Python-evdev - https://python-evdev.readthedocs.io/en/latest/index.html
-  * Install via ``sudo pip install evdev``
 * SPI-Py - https://github.com/lthiery/SPI-Py
   * Clone git repository: ``git clone https://github.com/lthiery/SPI-Py.git``
   * Change into the directory ``cd SPI-Py``
