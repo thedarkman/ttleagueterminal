@@ -47,6 +47,16 @@ def wait_for_tag():
     global notFound
     global oldTag
     notFound = True
+    # simulator mode ...
+    if 'simulator' in config:
+        print('Simulatormode')
+        if oldTag == '':
+            oldTag = config['simulator']['tag1']
+        else:
+            oldTag = config['simulator']['tag2']
+        return oldTag
+
+    # otherwise wait for nfc tag to be scanned
     while notFound:
 
         # Scan for cards
@@ -54,8 +64,6 @@ def wait_for_tag():
 
         # If a card is found
         if status == MIFAREReader.MI_OK:
-            # print "tag detected"
-
             # Get the UID of the card
             (status, uid) = MIFAREReader.MFRC522_Anticoll()
 
@@ -153,7 +161,8 @@ def clear_points_display():
         lcd.write8(ord(' '), True)
 
 
-def wait_for_points(set, row):
+def wait_for_points(set):
+    row = 0
     # print current set
     init_position = int(_lcd_cols) - 2
     lcd.set_cursor(init_position - 2, 0)
@@ -168,7 +177,7 @@ def wait_for_points(set, row):
     lcd.set_cursor(init_position, row)
     lcd.blink(True)
     typed = 0
-    points = 0
+    points = [0, 0]
     digits = []
     # wait for keyboard input
     for event in dev.read_loop():
@@ -176,29 +185,62 @@ def wait_for_points(set, row):
             key = categorize(event)
             if key.keystate == KeyEvent.key_down:
                 if key.keycode == 'KEY_KPENTER':
+                    print('ENTER pressed, points={:s}; row={:d}; typed={:d}; digits={:s}'.format(str(points), row, typed, str(digits)))
+                    # enter was pressed, so store points for this row and go to next row
                     if len(digits) > 0:
-                        points = int(digits.pop())
+                        points[row] = int(digits.pop())
                         if len(digits) > 0:
-                            points += int(digits.pop()) * 10
-                    break
+                            points[row] += int(digits.pop()) * 10
+                    row += 1
+                    lcd.set_cursor(init_position, row)
+                    typed = 0
+                    print('changed row to {:d}'.format(row))
+                    if row > 1:
+                        print('row > 1 --> end')
+                        break
                 elif key.keycode == 'KEY_DELETE' or key.keycode == 'KEY_BACKSPACE':
-                    if len(digits) > 0:
-                        digits.pop()
-                        new_position = init_position + (typed - 1)
-                        lcd.set_cursor(new_position, row)
-                        lcd.write8(ord(' '), True)
-                        lcd.set_cursor(new_position, row)
-                        typed -= 1
+                    print('DELETE pressed, points={:s}; row={:d}; typed={:d}; digits={:s}'.format(str(points), row, typed, str(digits)))
+                    # are we in row 1?
+                    if row == 0:
+                        if len(digits) > 0:
+                            digits.pop()
+                            new_col = init_position + (typed - 1)
+                            lcd.set_cursor(new_col, row)
+                            lcd.write8(ord(' '), True)
+                            lcd.set_cursor(new_col, row)
+                            typed -= 1
+                    else:
+                        if len(digits) > 0:
+                            digits.pop()
+                            new_col = init_position + (typed - 1)
+                            lcd.set_cursor(new_col, row)
+                            lcd.write8(ord(' '), True)
+                            lcd.set_cursor(new_col, row)
+                            typed -= 1
+                        else:
+                            # restore digits from row one points
+                            row_one_points = points[0];
+                            tens = int(row_one_points / 10)
+                            rest = row_one_points - (tens * 10)
+                            digits.append('{:d}'.format(tens))
+                            digits.append('{:d}'.format(rest))
+                            row = 0
+                            typed = 2
+                            lcd.set_cursor(init_position + 1, 0)
+                    print('after DELETE pressed, points={:s}; row={:d}; typed={:d}; digits={:s}'.format(str(points), row, typed,
+                                                                                                str(digits)))
+                    print('row is now {:d}'.format(row))
                 elif key.keycode in keypad_map and typed < 2:
                     typed += 1
                     mapped = keypad_map[key.keycode]
                     digits.append(chr(mapped))
                     lcd.write8(mapped, True)
+                    print('NUMBER pressed, points={:s}; row={:d}; typed={:d}; digits={:s}'.format(str(points), row, typed, str(digits)))
                     if typed == 2:
                         # set cursor on last digit to wait for enter
                         lcd.set_cursor(init_position + 1, row)
     lcd.blink(False)
-    return points
+    return (points[0], points[1])
 
 
 def wait_for_enter():
@@ -212,6 +254,8 @@ def wait_for_enter():
 
 def clear_players():
     global players
+    global oldTag
+    oldTag = ''
     players = []
 
 
@@ -294,7 +338,7 @@ config = {}
 try:
     # try to load config from file
     config = json.load(open('config.json'))
-except Exception, e:
+except Exception as e:
     print("Error while getting config: " + str(e))
     exit()
 
@@ -303,6 +347,8 @@ if 'url' not in config.keys() or \
                 'lcd' not in config.keys():
     error = 'Missing configuration key. Please check config.default.json file for configuration'
     raise KeyError(error)
+
+print('Starting with remote url: '+ config['url'])
 
 lcdConfig = config['lcd']
 _lcd_rows = lcdConfig['lines']
@@ -365,15 +411,17 @@ oldTag = ''
 while True:
     lcd.clear()
     while (2 - len(players)) > 0:
-        print('waiting for {:d} players to scan ...'.format((2 - len(players))))
         lcd.clear()
         waitMessage = '{:^' + str(_lcd_cols) + 's}\n\n{:^' + str(_lcd_cols) + 's}\n{:^' + str(_lcd_cols) + 's}'
-        waitMessage = waitMessage.format(ATT_LEAGUE_TERMINAL, 'waiting for {:d}'.format((2 - len(players))),
-                                         'players to scan')
+        waitMessage = waitMessage.format(ATT_LEAGUE_TERMINAL, 'Player #{:d}'.format((len(players)+1)),
+                                         'please scan')
+        print(waitMessage)
         lcd.message(waitMessage)
         rawTag = wait_for_tag()
+        if 'simulator' in config:
+            sleep(2)
         nfcTag = hex_string_from_nfc_tag(rawTag)
-        if nfcTag == config['adminTag']:
+        if 'adminTag' in config and nfcTag == config['adminTag']:
             show_admin_screen()
             continue
         print('player tagId scanned - {}'.format(nfcTag))
@@ -397,8 +445,7 @@ while True:
     (eloWin, eloLoss) = calc_elo_chances(players[0].elo, players[1].elo)
     lcd.message('{:11} {:+3d}\n{:11} {:+3d}'.format(players[0].name, eloWin, players[1].name, eloLoss))
     for x in range(1, 6):
-        home = wait_for_points(x, 0)
-        guest = wait_for_points(x, 1)
+        (home, guest) = wait_for_points(x)
         clear_points_display()
         if home == 0 and guest == 0:
             break

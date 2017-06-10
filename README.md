@@ -3,14 +3,25 @@ This project will run on a battery powered device (RaspberryPi Zero W)
 to be able to send game points to a running node.js app acting as server
 
 # Dependencies
+Some of these packages and system tools are already included in the full raspian distrobution, but i'm always using the lite images 
+* Git
+  * Install via ``sudo apt-get install git``
+* Python-Dev
+  * Install via ``sudo apt-get install python-dev``
+* Python-Pip
+  * Install via ``sudo apt-get install python-pip``
 * Python-evdev - https://python-evdev.readthedocs.io/en/latest/index.html
   * Install via ``sudo pip install evdev``
-* Adafruit CharLCD - https://github.com/adafruit/Adafruit_Python_CharLCD
-  * Or now possible to install via ``sudo pip install adafruit-charlcd``
-* SocketIO Client 0.5 - https://pypi.python.org/pypi/socketIO-client/0.5.7.2
-* RPi - As running on a Raspberry Pi Zero W
 * SPI-Py - https://github.com/lthiery/SPI-Py
+  * Clone git repository: ``git clone https://github.com/lthiery/SPI-Py.git``
+  * Change into the directory ``cd SPI-Py``
+  * Install via ``sudo python setup.py install``
 * MFRC522 - https://github.com/mxgxw/MFRC522-python
+  * Because i had to patch it, it is included in code
+* Python package requirements could be installed via ``sudo pip install -r requirements.txt``
+  * socketIO-client
+  * evdev
+  * adafruit-charlcd
 
 # Config 
 * Clone git repository to ``/home/pi``
