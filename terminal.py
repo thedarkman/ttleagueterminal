@@ -220,8 +220,10 @@ def wait_for_points(set):
                         else:
                             # restore digits from row one points
                             row_one_points = points[0];
-                            tens = int(row_one_points / 10)
-                            rest = row_one_points - (tens * 10)
+                            tens = rest = 0
+                            if row_one_points > 0:
+                                tens = int(row_one_points / 10)
+                                rest = row_one_points - (tens * 10)
                             digits.append('{:d}'.format(tens))
                             digits.append('{:d}'.format(rest))
                             row = 0
