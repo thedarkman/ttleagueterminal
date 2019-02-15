@@ -14,6 +14,8 @@ Some of these packages and system tools are already included in the full raspian
   * Clone git repository: ``git clone https://github.com/lthiery/SPI-Py.git``
   * Change into the directory ``cd SPI-Py``
   * Install via ``sudo python setup.py install``
+  * Make sure you have SPI enabled in your ``/boot/config.txt``
+    * ``dtparam=spi=on``
 * MFRC522 - https://github.com/mxgxw/MFRC522-python
   * Because i had to patch it, it is included in code
 * Python package requirements could be installed via ``sudo pip install -r requirements.txt``
