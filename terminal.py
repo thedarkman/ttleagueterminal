@@ -4,6 +4,7 @@ import json
 import signal
 import subprocess
 import socket
+import logging
 from time import sleep
 from datetime import datetime
 
@@ -20,6 +21,7 @@ from evdev import InputDevice, list_devices, categorize, ecodes, KeyEvent
 
 ATT_LEAGUE_TERMINAL = 'ATTLeague Terminal'
 
+logging.basicConfig()
 
 # Capture SIGINT for cleanup when the script is aborted
 def end_read(signal, frame):
@@ -362,7 +364,9 @@ if 'logMatches' in config.keys():
 
 notFound = True
 
+print('Connecting keyboard device')
 dev = InputDevice(config['keyboardDevice'])
+print('Keyboard device connected')
 
 # Hook the SIGINT
 signal.signal(signal.SIGINT, end_read)
@@ -374,7 +378,9 @@ keypad_map = {'KEY_KP0': 48, 'KEY_KP1': 49, 'KEY_KP2': 50, 'KEY_KP3': 51,
               'KEY_KP8': 56, 'KEY_KP9': 57}
 
 # Create an object of the class MFRC522
+print('Creating RFID reader')
 MIFAREReader = MFRC522.MFRC522()
+print('RFID reader created')
 
 # some special char for the cld
 _arrow_right = [16, 24, 20, 18, 20, 24, 16, 0]
